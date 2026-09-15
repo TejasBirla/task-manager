@@ -1,0 +1,14 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+
+@import "tailwindcss";
+@plugin "daisyui";
+
+body {
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  background-color: #faf8f3;
+}
+
+html {
+  scroll-behavior: smooth;
+}
