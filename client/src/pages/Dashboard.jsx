@@ -312,7 +312,23 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
+            {/* Mobile Progress */}
+            <div className="md:hidden bg-white border border-black/5 rounded-2xl p-4 mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">
+                  Progress
+                </span>
 
+                <span className="text-xs font-semibold">{progress}%</span>
+              </div>
+
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#ff6c37] rounded-full transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
             <div className="mb-5">
               <div className="bg-white border border-black/5 rounded-2xl px-4 flex items-center gap-3">
                 <span className="text-gray-400 text-sm">⌕</span>
@@ -326,7 +342,6 @@ export default function Dashboard() {
                 />
               </div>
             </div>
-
             <form
               className="bg-white border border-black/5 rounded-2xl p-3 mb-5 flex gap-3"
               onSubmit={handleAddTask}
@@ -347,7 +362,6 @@ export default function Dashboard() {
                 Add
               </button>
             </form>
-
             <div className="space-y-3">
               {filteredTasks.length === 0 ? (
                 <div className="bg-white border border-black/5 rounded-2xl px-6 py-12 text-center">
@@ -461,7 +475,6 @@ export default function Dashboard() {
                 ))
               )}
             </div>
-
             <div className="mt-8 text-center">
               <p className="text-xs text-gray-400">
                 Stay focused. One task at a time.
