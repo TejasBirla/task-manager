@@ -11,11 +11,13 @@ export default function Dashboard() {
     deleteTaskController,
   } = useContext(TaskContext);
 
-  const { user, logoutController } = useContext(AuthContext);
+  const { user, logoutController, deleteUserController } =
+    useContext(AuthContext);
 
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [showProfile, setShowProfile] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [newTaskDetail, setNewTaskDetail] = useState({
     task_desc: "",
@@ -243,7 +245,10 @@ export default function Dashboard() {
 
                   <div className="h-px bg-black/5 my-1" />
 
-                  <button className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-[#faf8f3] hover:text-[#171513]">
+                  <button
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-[#faf8f3] hover:text-[#171513]"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
                     Delete Account
                   </button>
 
@@ -465,6 +470,40 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+            <h2 className="text-xl font-semibold">Delete your account?</h2>
+
+            <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+              This action cannot be undone. Your account and all your tasks will
+              be permanently deleted.
+            </p>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl text-sm text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await deleteUserController();
+                  setShowDeleteModal(false);
+                }}
+                className="px-4 py-2 rounded-xl text-sm text-white bg-red-500 hover:bg-red-600"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
