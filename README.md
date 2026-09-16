@@ -6,6 +6,12 @@ The project focuses on backend development, API design, authentication, database
 
 ---
 
+## Live Demo
+
+🚀 **Live Application:** https://task-manager-ochre-three.vercel.app
+
+---
+
 ## Features
 
 * User registration and login
