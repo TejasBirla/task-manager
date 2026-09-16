@@ -5,8 +5,10 @@ from validators import validate_json_body
 from email_validator import validate_email
 from token_utils import create_token
 from auth_middleware import token_required
+from psycopg.errors import UniqueViolation
 
 auth_routes = Blueprint("auth_routes", __name__)
+
 
 
 @auth_routes.route("/api/register", methods=["POST"])
@@ -18,6 +20,7 @@ def user_register():
     if error:
         return jsonify({"error": error}), 400
 
+    # Check required fields.
     if not data.get("username") or not data.get("email") or not data.get("password"):
         return jsonify({"error": "All fields are required."}), 400
 
@@ -28,68 +31,84 @@ def user_register():
     except Exception:
         return jsonify({"error": "Invalid email address."}), 400
 
+    # Validate username.
     if not isinstance(data["username"], str) or data["username"].strip() == "":
         return jsonify({"error": "Username cannot be empty."}), 400
 
+    # Validate password length.
     if len(data["password"]) < 6:
         return jsonify({"error": "Password must be at least 6 characters long."}), 400
 
     # Never store the original password in the database.
     password_hash = generate_password_hash(data["password"])
 
-    # Check for duplicate username or email.
-    with conn.cursor() as cursor:
-        cursor.execute(
-            """
-            SELECT FROM users
-            WHERE username = %s OR email = %s
-            """,
-            (data["username"], email),
+    try:
+        # Check for duplicate username or email.
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT 1
+                FROM users
+                WHERE username = %s OR email = %s
+                """,
+                (data["username"], email),
+            )
+
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                return jsonify(
+                    {"error": "Username or email already exists."}
+                ), 409
+
+        # Create the new user.
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO users (username, email, password_hash)
+                VALUES (%s, %s, %s)
+                RETURNING user_id, username, email
+                """,
+                (data["username"], email, password_hash),
+            )
+
+            new_user = cursor.fetchone()
+
+            # Create JWT so the user is logged in immediately.
+            token = create_token(new_user)
+
+        # Save transaction.
+        conn.commit()
+
+        return (
+            jsonify(
+                {
+                    "message": "Registration successful",
+                    "user": {
+                        "user_id": new_user["user_id"],
+                        "username": new_user["username"],
+                        "email": new_user["email"],
+                    },
+                    "token": token,
+                }
+            ),
+            201,
         )
 
-        existing_user = cursor.fetchone()
+    except UniqueViolation:
+        # Database-level protection against duplicate username/email.
+        conn.rollback()
 
-        if existing_user:
-            return jsonify({"error": "Username or email already exists."}), 400
+        return jsonify(
+            {"error": "Username or email already exists."}
+        ), 409
 
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    """
-                    INSERT INTO users (username, email, password_hash)
-                    VALUES (%s, %s, %s)
-                    RETURNING user_id, username, email
-                    """,
-                    (data["username"], email, password_hash),
-                )
+    except Exception as e:
+        # Handle unexpected database/server errors.
+        conn.rollback()
 
-                new_user = cursor.fetchone()
-
-                # Create JWT so the user is logged in immediately.
-                token = create_token(new_user)
-
-                conn.commit()
-
-                return (
-                    jsonify(
-                        {
-                            "message": "Registration successful",
-                            "user": {
-                                "user_id": new_user["user_id"],
-                                "username": new_user["username"],
-                                "email": new_user["email"],
-                            },
-                            "token": token,
-                        }
-                    ),
-                    201,
-                )
-
-        except Exception as e:
-            conn.rollback()
-            print("Error in user register:", e)
-            abort(500)
-
+        print("Error in user register:", e)
+        abort(500)
 
 @auth_routes.route("/api/login", methods=["POST"])
 def user_login():
