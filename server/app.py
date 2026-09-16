@@ -10,7 +10,7 @@ app = Flask(__name__)
 app.register_blueprint(task_routes)
 app.register_blueprint(auth_routes)
 
-CORS(app, origins=["https://task-manager-ochre-three.vercel.app/"])
+CORS(app, origins=["https://task-manager-ochre-three.vercel.app"])
 
 
 @app.route("/")
