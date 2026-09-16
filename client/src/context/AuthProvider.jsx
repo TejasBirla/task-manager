@@ -59,6 +59,20 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const deleteUserController = async () => {
+    try {
+      const { data } = await api.delete("/api/delete/user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
+      toast.success(data?.message);
+      navigate("/");
+    } catch (error) {
+      console.log("Error in deleting user controller: ", error);
+      toast.error(error?.response?.data?.error || "Something went wrong.");
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -66,6 +80,7 @@ export function AuthProvider({ children }) {
     loginController,
     registerController,
     logoutController,
+    deleteUserController,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
